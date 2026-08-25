@@ -45,13 +45,15 @@ public class Product {
     @OneToMany(mappedBy = "product")
     private List<CartItem> cartItem = new ArrayList<>();
 
-    public Product(String name, BigDecimal price, String imageUrl,
-                   LocalDateTime createdTime, LocalDateTime updatedTime) {
+    public Product(String name, BigDecimal price, int quantity, String imageUrl,
+                   LocalDateTime createdTime, LocalDateTime updatedTime, Category category) {
         this.name = name;
         this.price = price;
+        this.quantity = quantity;
         this.imageUrl = imageUrl;
         this.createdTime = createdTime;
         this.updatedTime = updatedTime;
+        this.category = category;
     }
 }
 
