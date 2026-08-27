@@ -1,16 +1,20 @@
 package com.springboot.online_store.controllers;
 
-import com.springboot.online_store.dtos.ProductCreatingDto;
+import com.springboot.online_store.dtos.CreateAndUpdateProductDto;
+import com.springboot.online_store.dtos.ProductFilter;
 import com.springboot.online_store.dtos.ProductInfoDto;
-import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.dtos.ProductSearchFilter;
 import com.springboot.online_store.services.ProductService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @Slf4j
 @RestController
-@RequestMapping("/product")
+@RequestMapping("/products")
 public class ProductController {
 
     private final ProductService productService;
@@ -26,7 +30,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public ResponseEntity<ProductInfoDto> createProduct(@RequestBody ProductCreatingDto productDto){
+    public ResponseEntity<ProductInfoDto> createProduct(@Valid @RequestBody CreateAndUpdateProductDto productDto){
         log.info("create product: {}", productDto);
         return ResponseEntity.ok(productService.createProduct(productDto));
     }
@@ -41,10 +45,28 @@ public class ProductController {
 
     @PutMapping("update/{id}")
     public ResponseEntity<ProductInfoDto> updateProduct(
-            @PathVariable Long id, @RequestBody ProductCreatingDto productDto
+            @PathVariable Long id,
+            @Valid @RequestBody CreateAndUpdateProductDto productDto
             ){
         log.info("update product: {}", productDto);
 
         return ResponseEntity.ok(productService.updateProduct(id, productDto));
     }
+
+    @GetMapping
+    public ResponseEntity<List<ProductInfoDto>> getProductsCatalog(
+            ProductFilter productFilter
+    ){
+        log.info("get products catalog");
+        return ResponseEntity.ok(productService.getCatalog(productFilter));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductInfoDto>> getProductsBySearch(
+            ProductSearchFilter filter
+    ){
+        log.info("get products with filter");
+        return ResponseEntity.ok(productService.searchByFilter(filter));
+    }
+
 }
