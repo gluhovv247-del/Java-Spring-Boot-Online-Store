@@ -53,4 +53,15 @@ public class GlobalExceptionHandler {
         log.info("bad request exception: {}", ex.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDto);
     }
+
+    @ExceptionHandler(CategoryNotEmptyException.class)
+    public ResponseEntity<ErrorResponseDto> handleConflictException(Exception ex){
+        var responseDto = new ErrorResponseDto(
+                ex.getClass(),
+                ex.getMessage(),
+                LocalDateTime.now()
+        );
+        log.info("conflict exception: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(responseDto);
+    }
 }

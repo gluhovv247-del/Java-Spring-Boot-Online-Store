@@ -1,11 +1,15 @@
 package com.springboot.online_store.services;
 
 import com.springboot.online_store.constants.BusinessConstants;
-import com.springboot.online_store.dtos.*;
+import com.springboot.online_store.dtos.product.*;
+import com.springboot.online_store.entities.Category;
 import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.mappers.ProductMapper;
+import com.springboot.online_store.repositories.CategoryRepository;
 import com.springboot.online_store.repositories.ProductRepository;
 import com.springboot.online_store.specifications.ProductSpecification;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -18,10 +22,12 @@ import java.util.List;
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductMapper mapper;
 
-    public ProductService(ProductRepository productRepository, ProductMapper mapper) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper mapper) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
         this.mapper = mapper;
     }
 
@@ -31,6 +37,10 @@ public class ProductService {
     }
 
     public ProductInfoDto createProduct(CreateAndUpdateProductDto productDto) {
+        Category category = productDto.categoryId() != null
+                ? categoryRepository.getReferenceById(productDto.categoryId())
+                : null;
+
         var product = new Product(
                 productDto.name(),
                 productDto.price(),
@@ -38,7 +48,7 @@ public class ProductService {
                 productDto.imageUrl(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                productDto.category()
+                category
         );
         productRepository.save(product);
         return mapper.toProductInfoDto(product);
@@ -49,17 +59,20 @@ public class ProductService {
         productRepository.delete(product);
     }
 
+    @Transactional
     public ProductInfoDto updateProduct(Long id, CreateAndUpdateProductDto productDto) {
         var product = productRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+        Category category = productDto.categoryId() != null
+                ? categoryRepository.getReferenceById(productDto.categoryId())
+                : null;
 
         product.setName(productDto.name());
         product.setPrice(productDto.price());
         product.setQuantity(productDto.quantity());
         product.setImageUrl(productDto.imageUrl());
-        product.setCategory(productDto.category());
+        product.setCategory(category);
         product.setUpdatedTime(LocalDateTime.now());
 
-        productRepository.save(product);
         return mapper.toProductInfoDto(product);
     }
 
@@ -82,7 +95,7 @@ public class ProductService {
 
         log.info("received: {} products in catalog", products.size());
 
-        return mapper.toListOfProductInfoDto(products);
+        return mapper.toProductInfoDtoList(products);
     }
 
     public List<ProductInfoDto> searchByFilter(ProductSearchFilter searchFilter){
@@ -100,7 +113,7 @@ public class ProductService {
 
         log.info("received: {} products", products.size());
 
-        return mapper.toListOfProductInfoDto(products);
+        return mapper.toProductInfoDtoList(products);
 
     }
 

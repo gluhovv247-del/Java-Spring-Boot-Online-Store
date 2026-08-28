@@ -1,9 +1,9 @@
 package com.springboot.online_store.controllers;
 
-import com.springboot.online_store.dtos.CreateAndUpdateProductDto;
-import com.springboot.online_store.dtos.ProductFilter;
-import com.springboot.online_store.dtos.ProductInfoDto;
-import com.springboot.online_store.dtos.ProductSearchFilter;
+import com.springboot.online_store.dtos.product.CreateAndUpdateProductDto;
+import com.springboot.online_store.dtos.product.ProductFilter;
+import com.springboot.online_store.dtos.product.ProductInfoDto;
+import com.springboot.online_store.dtos.product.ProductSearchFilter;
 import com.springboot.online_store.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;

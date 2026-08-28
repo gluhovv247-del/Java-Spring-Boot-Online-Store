@@ -1,5 +1,6 @@
 package com.springboot.online_store.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,9 +26,16 @@ public class Category {
     @JoinColumn(name = "parent_id")
     private Category parent;
 
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Category> children = new ArrayList<>();
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<Product> products = new ArrayList<>();
+
+    public Category(String name, Category parent) {
+        this.name = name;
+        this.parent = parent;
+    }
 }
