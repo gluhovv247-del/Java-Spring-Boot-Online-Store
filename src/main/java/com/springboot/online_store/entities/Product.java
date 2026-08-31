@@ -1,5 +1,6 @@
 package com.springboot.online_store.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,7 @@ public class Product {
     private Category category;
 
     @OneToMany(mappedBy = "product")
+    @JsonIgnore
     private List<CartItem> cartItem = new ArrayList<>();
 
     public Product(String name, BigDecimal price, int quantity, String imageUrl,

@@ -7,6 +7,7 @@ import com.springboot.online_store.dtos.product.ProductSearchFilter;
 import com.springboot.online_store.services.ProductService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,18 +33,20 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ProductInfoDto> createProduct(@Valid @RequestBody CreateAndUpdateProductDto productDto){
         log.info("create product: {}", productDto);
-        return ResponseEntity.ok(productService.createProduct(productDto));
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(productService.createProduct(productDto));
     }
 
-    @DeleteMapping("/delete/{id}")
+
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id){
         log.info("delete product with id: {}", id);
 
         productService.deleteProduct(id);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
-    @PutMapping("update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<ProductInfoDto> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody CreateAndUpdateProductDto productDto

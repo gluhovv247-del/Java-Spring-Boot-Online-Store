@@ -1,4 +1,4 @@
-package com.springboot.online_store.exceptions;
+package com.springboot.online_store.exceptions.handler;
 
 import java.time.LocalDateTime;
 

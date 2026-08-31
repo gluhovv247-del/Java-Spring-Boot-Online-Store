@@ -62,7 +62,7 @@ public class ProductService {
     @Transactional
     public ProductInfoDto updateProduct(Long id, CreateAndUpdateProductDto productDto) {
         var product = productRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        Category category = productDto.categoryId() != null
+        var category = productDto.categoryId() != null
                 ? categoryRepository.getReferenceById(productDto.categoryId())
                 : null;
 

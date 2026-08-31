@@ -4,7 +4,7 @@ import com.springboot.online_store.constants.BusinessConstants;
 import com.springboot.online_store.dtos.category.CategoryCreateDto;
 import com.springboot.online_store.dtos.category.CategoryInfoDto;
 import com.springboot.online_store.entities.Category;
-import com.springboot.online_store.exceptions.CategoryNotEmptyException;
+import com.springboot.online_store.exceptions.custom.CategoryNotEmptyException;
 import com.springboot.online_store.mappers.CategoryMapper;
 import com.springboot.online_store.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;

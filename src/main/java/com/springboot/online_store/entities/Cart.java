@@ -1,5 +1,6 @@
 package com.springboot.online_store.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -21,9 +22,11 @@ public class Cart {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     @OneToMany(mappedBy = "cart")
+    @JsonIgnore
     private List<CartItem> cartItem = new ArrayList<>();
 
 }

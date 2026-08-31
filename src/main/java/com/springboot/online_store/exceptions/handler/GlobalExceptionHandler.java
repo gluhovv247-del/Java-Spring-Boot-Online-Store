@@ -1,5 +1,7 @@
-package com.springboot.online_store.exceptions;
+package com.springboot.online_store.exceptions.handler;
 
+import com.springboot.online_store.exceptions.custom.CategoryNotEmptyException;
+import com.springboot.online_store.exceptions.custom.InsufficientStockException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +56,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDto);
     }
 
-    @ExceptionHandler(CategoryNotEmptyException.class)
+    @ExceptionHandler(
+            exception = {
+                    CategoryNotEmptyException.class,
+                    InsufficientStockException.class
+            })
     public ResponseEntity<ErrorResponseDto> handleConflictException(Exception ex){
         var responseDto = new ErrorResponseDto(
                 ex.getClass(),

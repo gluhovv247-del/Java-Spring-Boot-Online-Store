@@ -1,4 +1,4 @@
-package com.springboot.online_store.exceptions;
+package com.springboot.online_store.exceptions.custom;
 
 public class CategoryNotEmptyException extends RuntimeException{
     public CategoryNotEmptyException(String message){
