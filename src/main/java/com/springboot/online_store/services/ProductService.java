@@ -37,9 +37,8 @@ public class ProductService {
     }
 
     public ProductInfoDto createProduct(CreateAndUpdateProductDto productDto) {
-        Category category = productDto.categoryId() != null
-                ? categoryRepository.getReferenceById(productDto.categoryId())
-                : null;
+        Category category = categoryRepository.findById(productDto.categoryId())
+                .orElseThrow(EntityNotFoundException::new);
 
         var product = new Product(
                 productDto.name(),
@@ -50,7 +49,7 @@ public class ProductService {
                 LocalDateTime.now(),
                 category
         );
-        productRepository.save(product);
+        product = productRepository.save(product);
         return mapper.toProductInfoDto(product);
     }
 
@@ -62,9 +61,8 @@ public class ProductService {
     @Transactional
     public ProductInfoDto updateProduct(Long id, CreateAndUpdateProductDto productDto) {
         var product = productRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        var category = productDto.categoryId() != null
-                ? categoryRepository.getReferenceById(productDto.categoryId())
-                : null;
+        var category = categoryRepository.findById(productDto.categoryId())
+                .orElseThrow(EntityNotFoundException::new);
 
         product.setName(productDto.name());
         product.setPrice(productDto.price());

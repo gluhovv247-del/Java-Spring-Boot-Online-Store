@@ -58,10 +58,10 @@ public class CartItemService {
     }
 
     public List<CartItemDto> getCartItems(Integer pageSize, Integer pageNumber) {
-        if(pageSize == null){
+        if(pageSize == null || pageSize <= 0){
             pageSize = BusinessConstants.DEFAULT_PAGE_SIZE;
         }
-        if(pageNumber == null){
+        if(pageNumber == null || pageNumber < 0){
             pageNumber = BusinessConstants.DEFAULT_PAGE_NUMBER;
         }
 

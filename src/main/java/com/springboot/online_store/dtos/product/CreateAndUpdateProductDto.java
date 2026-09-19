@@ -1,10 +1,11 @@
 package com.springboot.online_store.dtos.product;
 
-import com.springboot.online_store.entities.Category;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 
+@Builder
 public record CreateAndUpdateProductDto(
         @NotBlank
         @Size(max = 100)
