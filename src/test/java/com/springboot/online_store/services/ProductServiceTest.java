@@ -15,9 +15,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -32,8 +29,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -62,6 +57,7 @@ class ProductServiceTest {
     private ProductSearchFilter productSearchFilterWithoutParams;
 
     private ProductFilter productFilterWithCategory;
+
     @BeforeEach
     void setUp(){
         this.createAndUpdateProductDto = CreateAndUpdateProductDto.builder()
@@ -112,7 +108,6 @@ class ProductServiceTest {
             var result = productService.getProduct(id);
 
             //THEN
-            assertNotNull(result);
             assertThat(result).isEqualTo(productInfoDto);
             verify(productRepository)
                     .findById(id);
@@ -165,14 +160,13 @@ class ProductServiceTest {
             verify(productRepository)
                     .save(captor.capture());
 
-            var capturedArgument = captor.getValue();
+            var capturedProduct = captor.getValue();
 
-            assertThat(capturedArgument.getName()).isEqualTo(createAndUpdateProductDto.name());
-            assertThat(capturedArgument.getPrice()).isEqualTo(createAndUpdateProductDto.price());
-            assertThat(capturedArgument.getCategory().getId()).isEqualTo(createAndUpdateProductDto.categoryId());
-            assertThat(capturedArgument.getImageUrl()).isEqualTo(createAndUpdateProductDto.imageUrl());
-            assertThat(capturedArgument.getPrice()).isEqualTo(createAndUpdateProductDto.price());
-            assertThat(capturedArgument.getQuantity()).isEqualTo(createAndUpdateProductDto.quantity());
+            assertThat(capturedProduct.getName()).isEqualTo(createAndUpdateProductDto.name());
+            assertThat(capturedProduct.getPrice()).isEqualTo(createAndUpdateProductDto.price());
+            assertThat(capturedProduct.getCategory()).isSameAs(category);
+            assertThat(capturedProduct.getImageUrl()).isEqualTo(createAndUpdateProductDto.imageUrl());
+            assertThat(capturedProduct.getQuantity()).isEqualTo(createAndUpdateProductDto.quantity());
         }
 
         @Test
@@ -366,7 +360,6 @@ class ProductServiceTest {
                     .findById(categoryId);
             verify(mapper)
                     .toProductInfoDto(product);
-            verify(product).setName(createAndUpdateProductDto.name());
         }
 
         @Test
@@ -381,7 +374,7 @@ class ProductServiceTest {
             //WHEN & THEN
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> productService.getProduct(id)
+                    () -> productService.updateProduct(id, createAndUpdateProductDto)
             );
 
             verify(productRepository)
@@ -400,18 +393,39 @@ class ProductServiceTest {
     class DeleteProduct {
         @Test
         void deleteProductShouldWork() {
+            //GIVEN
             Long id = 1L;
             var product = mock(Product.class);
             when(productRepository.findById(id))
                     .thenReturn(Optional.of(product));
 
+            //WHEN
             productService.deleteProduct(id);
 
+            //THEN
             verify(productRepository)
                     .delete(product);
             verify(productRepository)
                     .findById(id);
 
+        }
+        @Test
+        void shouldThrowEntityNotFoundExceptionWithProduct(){
+            //GIVEN
+            Long id = 1L;
+            var product = mock(Product.class);
+            when(productRepository.findById(id))
+                    .thenReturn(Optional.empty());
+            //WHEN & THEN
+            assertThrows(
+                    EntityNotFoundException.class,
+                    () -> productService.deleteProduct(id)
+            );
+
+            verify(productRepository)
+                    .findById(id);
+            verify(productRepository, never())
+                    .delete(product);
         }
     }
 
