@@ -3,18 +3,14 @@ package com.springboot.online_store.services;
 import com.springboot.online_store.constants.BusinessConstants;
 import com.springboot.online_store.dtos.cart.CartItemDto;
 import com.springboot.online_store.dtos.cart.UpdateCartItemDto;
-import com.springboot.online_store.dtos.category.CategoryInfoDto;
-import com.springboot.online_store.dtos.product.ProductInfoDto;
 import com.springboot.online_store.entities.Cart;
 import com.springboot.online_store.entities.CartItem;
 import com.springboot.online_store.entities.Category;
 import com.springboot.online_store.entities.Product;
 import com.springboot.online_store.exceptions.custom.InsufficientStockException;
 import com.springboot.online_store.mappers.CartItemMapper;
-import com.springboot.online_store.mappers.CategoryMapper;
 import com.springboot.online_store.repositories.CartItemRepository;
 import com.springboot.online_store.repositories.CartRepository;
-import com.springboot.online_store.repositories.CategoryRepository;
 import com.springboot.online_store.repositories.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,12 +30,10 @@ import org.springframework.data.domain.Pageable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.in;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -62,27 +56,22 @@ class CartItemServiceTest {
     @InjectMocks
     private CartItemService cartItemService;
 
-    private CartItemDto cartItemDto;
-
-    private CartItemDto cartItemDtoWithLargeQuantity;
-
-    private Product product;
-
-    private UpdateCartItemDto updateCartItemDto;
-
-    private UpdateCartItemDto updateCartItemDtoWithLargeQuantity;
-
-    @BeforeEach
-    void setUp() {
-        cartItemDto = CartItemDto.builder()
+    private CartItemDto cartItemDto(){
+        return CartItemDto.builder()
                 .productId(1L)
                 .quantity(1)
                 .build();
-        cartItemDtoWithLargeQuantity = CartItemDto.builder()
+    }
+
+    private CartItemDto cartItemDtoWithLargeQuantity(){
+        return CartItemDto.builder()
                 .productId(1L)
                 .quantity(100)
                 .build();
-        product = new Product(
+    }
+
+    private Product productBuilder(){
+        return new Product(
                 "name",
                 (BigDecimal.valueOf(100)),
                 10,
@@ -91,6 +80,14 @@ class CartItemServiceTest {
                 LocalDateTime.now(),
                 new Category()
         );
+    }
+
+    private UpdateCartItemDto updateCartItemDto;
+
+    private UpdateCartItemDto updateCartItemDtoWithLargeQuantity;
+
+    @BeforeEach
+    void setUp() {
         updateCartItemDto =
                 new UpdateCartItemDto(1);
         updateCartItemDtoWithLargeQuantity =
@@ -98,12 +95,14 @@ class CartItemServiceTest {
     }
 
     @Nested
-    class createCartItem {
+    class CreateCartItem {
         @Test
         void createCartItemShouldWork() {
             var cart = mock(Cart.class);
             var cartItem = mock(CartItem.class);
-            var infoDto = mock(CartItemDto.class);
+            var infoDto = cartItemDto();
+            var product = productBuilder();
+            var cartItemDto = cartItemDto();
 
             Long id = 1L;
             ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
@@ -139,7 +138,8 @@ class CartItemServiceTest {
         @Test
         void createCartItemShouldThrowInsufficientStockException() {
             var cart = mock(Cart.class);
-
+            var product = productBuilder();
+            var cartItemDtoWithLargeQuantity = cartItemDtoWithLargeQuantity();
             Long id = 1L;
 
             when(productRepository.findById(id))
@@ -148,6 +148,7 @@ class CartItemServiceTest {
                     .thenReturn(Optional.ofNullable(cart));
 
             //WHEN
+
             assertThrows(InsufficientStockException.class,
             () -> cartItemService.createCartItem(cartItemDtoWithLargeQuantity));
 
@@ -163,6 +164,7 @@ class CartItemServiceTest {
         @Test
         void shouldThrowEntityNotFoundExceptionWhenProductNotFound(){
             Long id = 1L;
+            var cartItemDto = cartItemDto();
 
             when(productRepository.findById(id))
                     .thenReturn(Optional.empty());
@@ -176,7 +178,7 @@ class CartItemServiceTest {
     }
 
     @Nested
-    class getCartItems{
+    class GetCartItems{
         @Test
         void getCartItemsShouldWork() {
             var infoDto = mock(CartItemDto.class);
@@ -268,11 +270,12 @@ class CartItemServiceTest {
     }
 
     @Nested
-    class updateCartItem {
+    class UpdateCartItem {
         @Test
         void updateCartItemShouldWork() {
             var cartItem = mock(CartItem.class);
-            var infoDto = mock(CartItemDto.class);
+            var infoDto = cartItemDto();
+            var product = productBuilder();
 
             Long id = 1L;
 
@@ -330,7 +333,7 @@ class CartItemServiceTest {
     }
 
     @Nested
-    class getCartItemById {
+    class GetCartItemById {
         @Test
         void getCartItemShouldWork() {
             Long id = 1L;

@@ -9,8 +9,6 @@ import com.springboot.online_store.exceptions.custom.CategoryNotEmptyException;
 import com.springboot.online_store.mappers.CategoryMapper;
 import com.springboot.online_store.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import org.checkerframework.checker.units.qual.A;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,7 +16,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,7 +23,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
@@ -46,20 +42,6 @@ class CategoryServiceTest {
     @InjectMocks
     private CategoryService categoryService;
 
-    private CategoryCreateDto createDtoWithParent;
-    private CategoryCreateDto createDtoWithoutParent;
-
-    @BeforeEach
-    void setUp() {
-        createDtoWithParent = CategoryCreateDto.builder()
-                .name("name")
-                .parentId(1L)
-                .build();
-        createDtoWithoutParent = CategoryCreateDto.builder()
-                .name("name")
-                .parentId(null)
-                .build();
-    }
 
     @Nested
     class CreateCategory {
@@ -68,18 +50,20 @@ class CategoryServiceTest {
             //GIVEN
             var category = mock(Category.class);
             var parentCategory = mock(Category.class);
-            var categoryInfoDto = mock(CategoryInfoDto.class);
+            var categoryInfoDto = CategoryInfoDto.builder()
+                    .name("name").build();
+            var categoryDto = createDtoWithParent();
             ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
 
             when(categoryMapper.toCategoryInfo(any(Category.class)))
                     .thenReturn(categoryInfoDto);
             when(categoryRepository.save(any(Category.class)))
                     .thenReturn(category);
-            when(categoryRepository.getReferenceById(createDtoWithParent.parentId()))
+            when(categoryRepository.getReferenceById(categoryDto.parentId()))
                     .thenReturn(parentCategory);
 
             //WHEN
-            var result = categoryService.createCategory(createDtoWithParent);
+            var result = categoryService.createCategory(categoryDto);
 
             //THEN
             assertThat(result).isEqualTo(categoryInfoDto);
@@ -88,18 +72,20 @@ class CategoryServiceTest {
             verify(categoryRepository)
                     .save(captor.capture());
             verify(categoryRepository)
-                    .getReferenceById(createDtoWithParent.parentId());
+                    .getReferenceById(categoryDto.parentId());
 
             var capturedCategory = captor.getValue();
-            assertThat(capturedCategory.getName()).isEqualTo(createDtoWithParent.name());
+            assertThat(capturedCategory.getName()).isEqualTo(categoryDto.name());
             assertThat(capturedCategory.getParent()).isSameAs(parentCategory);
         }
 
         @Test
         void createCategoryShouldWorkWithoutParentId() {
             //GIVEN
+            var categoryDto = createDtoWithoutParent();
             var category = mock(Category.class);
-            var categoryInfoDto = mock(CategoryInfoDto.class);
+            var categoryInfoDto = CategoryInfoDto.builder()
+                    .name("name").build();
             ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
 
             when(categoryMapper.toCategoryInfo(any(Category.class)))
@@ -108,7 +94,7 @@ class CategoryServiceTest {
                     .thenReturn(category);
 
             //WHEN
-            var result = categoryService.createCategory(createDtoWithoutParent);
+            var result = categoryService.createCategory(categoryDto);
 
             //THEN
             assertThat(result).isEqualTo(categoryInfoDto);
@@ -118,13 +104,13 @@ class CategoryServiceTest {
                     .save(captor.capture());
 
             var capturedCategory = captor.getValue();
-            assertThat(capturedCategory.getName()).isEqualTo(createDtoWithParent.name());
+            assertThat(capturedCategory.getName()).isEqualTo(categoryDto.name());
             assertThat(capturedCategory.getParent()).isSameAs(null);
         }
     }
 
     @Nested
-    class getCategories{
+    class GetCategories{
         @Test
         void getCategoriesShouldWork() {
             var categoryDto = mock(CategoryInfoDto.class);
@@ -178,11 +164,13 @@ class CategoryServiceTest {
     }
 
     @Nested
-    class updateCategory {
+    class UpdateCategory {
         @Test
         void updateCategoryShouldWorkWithoutParent() {
             var category = mock(Category.class);
-            var categoryInfo = mock(CategoryInfoDto.class);
+            var categoryInfo = CategoryInfoDto.builder()
+                    .name("name").build();
+            var createCategory = createDtoWithoutParent();
             Long id = 1L;
 
             when(categoryRepository.findById(id))
@@ -191,12 +179,12 @@ class CategoryServiceTest {
                     .thenReturn(categoryInfo);
 
             var result = categoryService.updateCategory(
-                    createDtoWithoutParent, id
+                    createCategory, id
             );
 
             assertThat(result).isEqualTo(categoryInfo);
 
-            verify(category).setName(createDtoWithoutParent.name());
+            verify(category).setName(createCategory.name());
             verify(categoryRepository).findById(id);
             verify(categoryMapper).toCategoryInfo(category);
         }
@@ -204,7 +192,9 @@ class CategoryServiceTest {
         @Test
         void updateCategoryShouldWork() {
             var category = mock(Category.class);
-            var categoryInfo = mock(CategoryInfoDto.class);
+            var categoryInfo = CategoryInfoDto.builder()
+                    .name("name").build();
+            var createCategory = createDtoWithParent();
             Long id = 1L;
 
             when(categoryRepository.findById(id))
@@ -214,12 +204,12 @@ class CategoryServiceTest {
                     .thenReturn(categoryInfo);
 
             var result = categoryService.updateCategory(
-                    createDtoWithParent, id
+                    createCategory, id
             );
 
             assertThat(result).isEqualTo(categoryInfo);
 
-            verify(category).setName(createDtoWithParent.name());
+            verify(category).setName(createCategory.name());
             verify(category).setParent(category);
 
             verify(categoryRepository, times(2)).findById(id);
@@ -229,22 +219,23 @@ class CategoryServiceTest {
         @Test
         void shouldThrowEntityNotFoundException(){
             var category = mock(Category.class);
+            var createCategory = createDtoWithParent();
             Long id = 1L;
 
             when(categoryRepository.findById(id))
                     .thenReturn(Optional.empty());
 
             assertThrows(EntityNotFoundException.class,
-            () -> categoryService.updateCategory(createDtoWithParent, id));
+            () -> categoryService.updateCategory(createCategory, id));
 
             verify(categoryRepository).findById(id);
-            verify(category, never()).setName(createDtoWithParent.name());
+            verify(category, never()).setName(createCategory.name());
             verify(category, never()).setParent(category);
         }
     }
 
     @Nested
-    class deleteEmptyCategory {
+    class DeleteEmptyCategory {
         @Test
         void deleteEmptyCategoryShouldWork() {
             Long id = 1L;
@@ -290,7 +281,7 @@ class CategoryServiceTest {
     }
 
     @Nested
-    class deleteCategoryWithProducts {
+    class DeleteCategoryWithProducts {
         @Test
         void deleteCategoryWithProductsShouldWork() {
             Long id = 1L;
@@ -318,5 +309,18 @@ class CategoryServiceTest {
             verify(categoryRepository).findById(id);
             verify(categoryRepository, never()).deleteById(id);
         }
+    }
+
+    private CategoryCreateDto createDtoWithParent(){
+        return CategoryCreateDto.builder()
+                .name("name")
+                .parentId(1L)
+                .build();
+    }
+    private CategoryCreateDto createDtoWithoutParent(){
+        return CategoryCreateDto.builder()
+                .name("name")
+                .parentId(null)
+                .build();
     }
 }

@@ -58,7 +58,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductInfoDto>> getProductsCatalog(
-            ProductFilter productFilter
+            @Valid ProductFilter productFilter
     ){
         log.info("get products catalog");
         return ResponseEntity.ok(productService.getCatalog(productFilter));
@@ -66,7 +66,7 @@ public class ProductController {
 
     @GetMapping("/search")
     public ResponseEntity<List<ProductInfoDto>> getProductsBySearch(
-            ProductSearchFilter filter
+            @Valid ProductSearchFilter filter
     ){
         log.info("get products with filter");
         return ResponseEntity.ok(productService.searchByFilter(filter));

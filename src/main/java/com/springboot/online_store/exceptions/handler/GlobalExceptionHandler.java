@@ -53,7 +53,7 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
         log.info("bad request exception: {}", ex.getMessage());
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(responseDto);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseDto);
     }
 
     @ExceptionHandler(

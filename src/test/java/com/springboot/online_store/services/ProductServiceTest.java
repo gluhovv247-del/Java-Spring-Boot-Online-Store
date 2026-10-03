@@ -15,6 +15,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -29,6 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -46,58 +50,14 @@ class ProductServiceTest {
     @InjectMocks
     private ProductService productService;
 
-    private CreateAndUpdateProductDto createAndUpdateProductDto;
-
-    private ProductFilter productFilter;
-
-    private ProductFilter productFilterWithoutParams;
-
-    private ProductSearchFilter productSearchFilter;
-
-    private ProductSearchFilter productSearchFilterWithoutParams;
-
-    private ProductFilter productFilterWithCategory;
-
-    @BeforeEach
-    void setUp(){
-        this.createAndUpdateProductDto = CreateAndUpdateProductDto.builder()
-                .name("test_product")
-                .price(BigDecimal.valueOf(1000))
-                .categoryId(0L)
-                .quantity(50)
-                .imageUrl("fjddjdj")
-                .build();
-
-        this.productFilter = ProductFilter.builder()
-                .pageNumber(0)
-                .pageSize(10)
-                .category(null)
-                .build();
-        this.productFilterWithoutParams = ProductFilter.builder()
-                .build();
-        this.productFilterWithCategory = ProductFilter.builder()
-                .pageNumber(0)
-                .pageSize(10)
-                .category(new Category("phones", null))
-                .build();
-
-        this.productSearchFilterWithoutParams = ProductSearchFilter.builder()
-                .build();
-        this.productSearchFilter = ProductSearchFilter.builder()
-                .pageNumber(0)
-                .pageSize(10)
-                .build();
-
-    }
-
     @Nested
-    class getProductById {
+    class GetProductById {
         @Test
         void getProductShouldWork() {
             //GIVEN
             Long id = 1L;
             var product = mock(Product.class);
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productInfoDto = productInfoDto();
 
             when(productRepository.findById(id))
                     .thenReturn(Optional.of(product));
@@ -136,25 +96,26 @@ class ProductServiceTest {
         @Test
         void createProductShouldWork(){
             //GIVEN
+            var createDto = createAndUpdateProductDto();
             var category = mock(Category.class);
             var product = mock(Product.class);
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productInfoDto = productInfoDto();
             ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
 
             when(mapper.toProductInfoDto(product))
                     .thenReturn(productInfoDto);
-            when(categoryRepository.findById(createAndUpdateProductDto.categoryId()))
+            when(categoryRepository.findById(createDto.categoryId()))
                     .thenReturn(Optional.of(category));
             when(productRepository.save(any(Product.class))).thenReturn(product);
 
             //WHEN
-            var result = productService.createProduct(createAndUpdateProductDto);
+            var result = productService.createProduct(createDto);
 
             //THEN
             assertThat(result).isEqualTo(productInfoDto);
 
             verify(categoryRepository)
-                    .findById(createAndUpdateProductDto.categoryId());
+                    .findById(createDto.categoryId());
             verify(mapper)
                     .toProductInfoDto(product);
             verify(productRepository)
@@ -162,26 +123,28 @@ class ProductServiceTest {
 
             var capturedProduct = captor.getValue();
 
-            assertThat(capturedProduct.getName()).isEqualTo(createAndUpdateProductDto.name());
-            assertThat(capturedProduct.getPrice()).isEqualTo(createAndUpdateProductDto.price());
+            assertThat(capturedProduct.getName()).isEqualTo(createDto.name());
+            assertThat(capturedProduct.getPrice()).isEqualTo(createDto.price());
             assertThat(capturedProduct.getCategory()).isSameAs(category);
-            assertThat(capturedProduct.getImageUrl()).isEqualTo(createAndUpdateProductDto.imageUrl());
-            assertThat(capturedProduct.getQuantity()).isEqualTo(createAndUpdateProductDto.quantity());
+            assertThat(capturedProduct.getImageUrl()).isEqualTo(createDto.imageUrl());
+            assertThat(capturedProduct.getQuantity()).isEqualTo(createDto.quantity());
         }
 
         @Test
         void shouldThrowEntityNotFoundExceptionWithCategory(){
             //GIVEN
-            when(categoryRepository.findById(createAndUpdateProductDto.categoryId()))
+            var createDto = createAndUpdateProductDto();
+
+            when(categoryRepository.findById(createDto.categoryId()))
                     .thenReturn(Optional.empty());
             //WHEN & THEN
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> productService.createProduct(createAndUpdateProductDto)
+                    () -> productService.createProduct(createDto)
             );
 
             verify(categoryRepository)
-                    .findById(createAndUpdateProductDto.categoryId());
+                    .findById(createDto.categoryId());
             verify(productRepository, never())
                     .save(any(Product.class));
         }
@@ -193,7 +156,8 @@ class ProductServiceTest {
         @Test
         void getCatalogShouldWork(){
             //GIVEN
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productFilter = productFilter();
+            var productInfoDto = productInfoDto();
             var product = mock(Product.class);
             var pageable = Pageable.ofSize(productFilter.pageSize())
                     .withPage(productFilter.pageNumber());
@@ -219,7 +183,9 @@ class ProductServiceTest {
         @Test
         void getCatalogShouldWorkWithoutPageParams(){
             //GIVEN
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productFilter = ProductFilter.builder()
+                            .build();
+            var productInfoDto = productInfoDto();
             var product = mock(Product.class);
 
             var pageable = Pageable.ofSize(BusinessConstants.DEFAULT_PAGE_SIZE)
@@ -233,7 +199,7 @@ class ProductServiceTest {
                     .thenReturn(dtos);
 
             //WHEN
-            var result = productService.getCatalog(productFilterWithoutParams);
+            var result = productService.getCatalog(productFilter);
 
             //THEN
             assertThat(result).isEqualTo(dtos);
@@ -246,8 +212,9 @@ class ProductServiceTest {
         @Test
         void getCatalogWithCategoryShouldWork(){
             //GIVEN
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productInfoDto = productInfoDto();
             var product = mock(Product.class);
+            var productFilter = productFilterWithCategory();
 
             var products = List.of(product);
             var dtos = List.of(productInfoDto);
@@ -258,7 +225,7 @@ class ProductServiceTest {
                     .thenReturn(dtos);
 
             //WHEN
-            var result = productService.getCatalog(productFilterWithCategory);
+            var result = productService.getCatalog(productFilter);
 
             //THEN
             assertThat(result).isEqualTo(dtos);
@@ -275,6 +242,7 @@ class ProductServiceTest {
         @Test
         void searchByFilterShouldWork(){
             //GIVEN
+            var productFilter = productSearchFilter();
             var productInfoDto = mock(ProductInfoDto.class);
             var product = mock(Product.class);
             var pageable = Pageable.ofSize(productFilter.pageSize())
@@ -288,7 +256,7 @@ class ProductServiceTest {
                     .thenReturn(dtos);
 
             //WHEN
-            var result = productService.searchByFilter(productSearchFilter);
+            var result = productService.searchByFilter(productFilter);
 
             //THEN
             assertThat(result).isEqualTo(dtos);
@@ -301,6 +269,7 @@ class ProductServiceTest {
         @Test
         void searchByFilterWithoutPageParamsShouldWork(){
             //GIVEN
+            var productFilter  = ProductSearchFilter.builder().build();
             var productInfoDto = mock(ProductInfoDto.class);
             var product = mock(Product.class);
             var pageable = Pageable.ofSize(BusinessConstants.DEFAULT_PAGE_SIZE)
@@ -314,7 +283,7 @@ class ProductServiceTest {
                     .thenReturn(dtos);
 
             //WHEN
-            var result = productService.searchByFilter(productSearchFilterWithoutParams);
+            var result = productService.searchByFilter(productFilter);
 
             //THEN
             assertThat(result).isEqualTo(dtos);
@@ -330,11 +299,12 @@ class ProductServiceTest {
 
         @Test
         void updateProductShouldWork() {
-            Long categoryId = createAndUpdateProductDto.categoryId();
+            var createDto = createAndUpdateProductDto();
+            Long categoryId = createDto.categoryId();
             Long productId = 1L;
             var product = mock(Product.class);
             var category = mock(Category.class);
-            var productInfoDto = mock(ProductInfoDto.class);
+            var productInfoDto = productInfoDto();
 
             when(productRepository.findById(productId))
                     .thenReturn(Optional.of(product));
@@ -343,14 +313,14 @@ class ProductServiceTest {
             when(mapper.toProductInfoDto(product))
                     .thenReturn(productInfoDto);
 
-            var result = productService.updateProduct(productId, createAndUpdateProductDto);
+            var result = productService.updateProduct(productId, createDto);
 
             assertThat(result).isEqualTo(productInfoDto);
 
-            verify(product).setName(createAndUpdateProductDto.name());
-            verify(product).setPrice(createAndUpdateProductDto.price());
-            verify(product).setQuantity(createAndUpdateProductDto.quantity());
-            verify(product).setImageUrl(createAndUpdateProductDto.imageUrl());
+            verify(product).setName(createDto.name());
+            verify(product).setPrice(createDto.price());
+            verify(product).setQuantity(createDto.quantity());
+            verify(product).setImageUrl(createDto.imageUrl());
             verify(product).setCategory(category);
             verify(product).setUpdatedTime(any(LocalDateTime.class));
 
@@ -366,6 +336,7 @@ class ProductServiceTest {
         void shouldThrowEntityNotFoundExceptionWithProduct(){
             //GIVEN
             Long id = 1L;
+            var createDto = createAndUpdateProductDto();
             var product = mock(Product.class);
             var category = mock(Category.class);
 
@@ -374,16 +345,16 @@ class ProductServiceTest {
             //WHEN & THEN
             assertThrows(
                     EntityNotFoundException.class,
-                    () -> productService.updateProduct(id, createAndUpdateProductDto)
+                    () -> productService.updateProduct(id, createDto)
             );
 
             verify(productRepository)
                     .findById(id);
 
-            verify(product, never()).setName(createAndUpdateProductDto.name());
-            verify(product, never()).setPrice(createAndUpdateProductDto.price());
-            verify(product, never()).setQuantity(createAndUpdateProductDto.quantity());
-            verify(product, never()).setImageUrl(createAndUpdateProductDto.imageUrl());
+            verify(product, never()).setName(createDto.name());
+            verify(product, never()).setPrice(createDto.price());
+            verify(product, never()).setQuantity(createDto.quantity());
+            verify(product, never()).setImageUrl(createDto.imageUrl());
             verify(product, never()).setCategory(category);
             verify(product, never()).setUpdatedTime(any(LocalDateTime.class));
         }
@@ -428,5 +399,49 @@ class ProductServiceTest {
                     .delete(product);
         }
     }
+
+    private CreateAndUpdateProductDto createAndUpdateProductDto(){
+        return CreateAndUpdateProductDto.builder()
+                .name("test_product")
+                .price(BigDecimal.valueOf(1000))
+                .categoryId(0L)
+                .quantity(50)
+                .imageUrl("fjddjdj")
+                .build();
+    }
+
+    private ProductInfoDto productInfoDto(){
+        return ProductInfoDto.builder()
+                .name("test_product")
+                .price(BigDecimal.valueOf(1000))
+                .quantity(50)
+                .imageUrl("fjddjdj")
+                .build();
+    }
+
+    private ProductFilter productFilter(){
+        return ProductFilter.builder()
+                .pageNumber(0)
+                .pageSize(10)
+                .category(null)
+                .build();
+    }
+
+    private ProductSearchFilter productSearchFilter(){
+        return ProductSearchFilter.builder()
+                .pageNumber(0)
+                .pageSize(10)
+                .build();
+    }
+
+    private ProductFilter productFilterWithCategory(){
+        return ProductFilter.builder()
+                .pageNumber(0)
+                .pageSize(10)
+                .category(new Category("phones", null))
+                .build();
+    }
+
+
 
 }

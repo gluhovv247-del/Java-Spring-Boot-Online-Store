@@ -1,10 +1,12 @@
 package com.springboot.online_store.dtos.product;
 
 import com.springboot.online_store.entities.Category;
+import lombok.Builder;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
+@Builder
 public record ProductInfoDto(
         Long id,
         String name,
