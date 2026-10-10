@@ -56,44 +56,6 @@ class CartItemServiceTest {
     @InjectMocks
     private CartItemService cartItemService;
 
-    private CartItemDto cartItemDto(){
-        return CartItemDto.builder()
-                .productId(1L)
-                .quantity(1)
-                .build();
-    }
-
-    private CartItemDto cartItemDtoWithLargeQuantity(){
-        return CartItemDto.builder()
-                .productId(1L)
-                .quantity(100)
-                .build();
-    }
-
-    private Product productBuilder(){
-        return new Product(
-                "name",
-                (BigDecimal.valueOf(100)),
-                10,
-                null,
-                LocalDateTime.now(),
-                LocalDateTime.now(),
-                new Category()
-        );
-    }
-
-    private UpdateCartItemDto updateCartItemDto;
-
-    private UpdateCartItemDto updateCartItemDtoWithLargeQuantity;
-
-    @BeforeEach
-    void setUp() {
-        updateCartItemDto =
-                new UpdateCartItemDto(1);
-        updateCartItemDtoWithLargeQuantity =
-                new UpdateCartItemDto(100);
-    }
-
     @Nested
     class CreateCartItem {
         @Test
@@ -276,6 +238,8 @@ class CartItemServiceTest {
             var cartItem = mock(CartItem.class);
             var infoDto = cartItemDto();
             var product = productBuilder();
+            var updateCartItemDto =
+                    new UpdateCartItemDto(1);
 
             Long id = 1L;
 
@@ -302,6 +266,8 @@ class CartItemServiceTest {
         void updateCartItemShouldThrowInsufficientStockException() {
             var cartItem = mock(CartItem.class);
             var product = mock(Product.class);
+            var updateCartItemDtoWithLargeQuantity =
+                    new UpdateCartItemDto(100);
             Long id = 1L;
 
             when(cartItem.getProduct())
@@ -321,6 +287,8 @@ class CartItemServiceTest {
         @Test
         void shouldThrowEntityNotFoundException(){
             Long id = 1L;
+            var updateCartItemDto =
+                    new UpdateCartItemDto(1);
 
             when(cartItemRepository.findById(id))
                     .thenReturn(Optional.empty());
@@ -368,5 +336,31 @@ class CartItemServiceTest {
             verify(cartItemRepository)
                     .findById(id);
         }
+    }
+
+    private CartItemDto cartItemDto(){
+        return CartItemDto.builder()
+                .productId(1L)
+                .quantity(1)
+                .build();
+    }
+
+    private CartItemDto cartItemDtoWithLargeQuantity(){
+        return CartItemDto.builder()
+                .productId(1L)
+                .quantity(100)
+                .build();
+    }
+
+    private Product productBuilder(){
+        return new Product(
+                "name",
+                (BigDecimal.valueOf(100)),
+                10,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                new Category()
+        );
     }
 }

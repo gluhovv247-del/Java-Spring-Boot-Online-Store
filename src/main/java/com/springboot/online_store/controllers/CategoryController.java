@@ -5,7 +5,6 @@ import com.springboot.online_store.dtos.category.CategoryInfoDto;
 import com.springboot.online_store.services.CategoryService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.coyote.Response;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -52,7 +51,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}/withProducts")
-    public ResponseEntity<Void> deleteCategoryWIthProducts(@PathVariable("id") Long id){
+    public ResponseEntity<Void> deleteCategoryWithProducts(@PathVariable("id") Long id){
         log.info("delete category with id = {}", id);
         categoryService.deleteCategoryWithProducts(id);
         return ResponseEntity.noContent().build();

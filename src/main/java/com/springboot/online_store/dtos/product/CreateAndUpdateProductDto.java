@@ -23,6 +23,7 @@ public record CreateAndUpdateProductDto(
 
         String imageUrl,
 
+        @NotNull
         Long categoryId
 ) {
 }

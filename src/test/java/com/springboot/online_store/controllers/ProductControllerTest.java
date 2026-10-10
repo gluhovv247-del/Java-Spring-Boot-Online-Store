@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -204,22 +205,21 @@ class ProductControllerTest {
     class GetProductsCatalog {
         @Test
         void getProductsCatalogShouldWork() throws Exception {
-            var productFilter = ProductFilter.builder()
-                    .pageSize(10)
-                    .pageNumber(0)
-                    .category(new Category())
-                    .build();
 
-            var infoDto = mock(ProductInfoDto.class);
+            var infoDto = builderInfoDto();
             var infoDtoList = List.of(infoDto);
 
-            when(productService.getCatalog(productFilter))
+            when(productService.getCatalog(any(ProductFilter.class)))
                     .thenReturn(infoDtoList);
 
             mockMvc.perform(get("/products")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(productFilter)))
-                    .andExpect(status().isOk());
+                            .param("pageSize", "10")
+                            .param("pageNumber", "0"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].name").value(infoDtoList.getFirst().name()))
+                    .andExpect(jsonPath("$[0].price").value(infoDtoList.getFirst().price()))
+                    .andExpect(jsonPath("$[0].quantity").value(infoDtoList.getFirst().quantity()))
+                    .andExpect(jsonPath("$[0].imageUrl").value(infoDtoList.getFirst().imageUrl()));
         }
     }
 
@@ -227,22 +227,21 @@ class ProductControllerTest {
     class GetProductsBySearch {
         @Test
         void getProductsBySearch() throws Exception {
-            var productFilter = ProductSearchFilter.builder()
-                    .pageSize(10)
-                    .pageNumber(0)
-                    .category(new Category())
-                    .build();
 
-            var infoDto = mock(ProductInfoDto.class);
+            var infoDto = builderInfoDto();
             var infoDtoList = List.of(infoDto);
 
-            when(productService.searchByFilter(productFilter))
+            when(productService.searchByFilter(any(ProductSearchFilter.class)))
                     .thenReturn(infoDtoList);
 
             mockMvc.perform(get("/products/search")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(productFilter)))
-                    .andExpect(status().isOk());
+                            .param("pageSize", "10")
+                            .param("pageNumber", "0"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].name").value(infoDtoList.getFirst().name()))
+                    .andExpect(jsonPath("$[0].price").value(infoDtoList.getFirst().price()))
+                    .andExpect(jsonPath("$[0].quantity").value(infoDtoList.getFirst().quantity()))
+                    .andExpect(jsonPath("$[0].imageUrl").value(infoDtoList.getFirst().imageUrl()));
         }
     }
 
