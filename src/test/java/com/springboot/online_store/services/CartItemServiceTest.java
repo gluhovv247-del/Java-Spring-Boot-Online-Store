@@ -13,7 +13,6 @@ import com.springboot.online_store.repositories.CartItemRepository;
 import com.springboot.online_store.repositories.CartRepository;
 import com.springboot.online_store.repositories.ProductRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -61,6 +61,11 @@
 		</dependency>
 
 
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-restclient</artifactId>
+		</dependency>
+
 		<!-- ==================== Database ==================== -->
 
 		<!-- PostgreSQL JDBC Driver -->
@@ -108,6 +113,32 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+<!--		Spring Boot test containers-->
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-testcontainers</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-postgresql</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+<!--		RestTestClient test-->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-resttestclient</artifactId>
 			<scope>test</scope>
 		</dependency>
 
@@ -209,6 +240,8 @@
 
 					<excludes>
 						<exclude>com/springboot/online_store/dtos/**</exclude>
+						<exclude>com/springboot/online_store/entities/**</exclude>
+						<exclude>com/springboot/online_store/enums/**</exclude>
 						<exclude>com/springboot/online_store/constants/**</exclude>
 					</excludes>
 				</configuration>

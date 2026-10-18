@@ -5,6 +5,7 @@ import lombok.Builder;
 
 @Builder
 public record CategoryInfoDto(
+        Long id,
         String name,
         Category parent
 ) {

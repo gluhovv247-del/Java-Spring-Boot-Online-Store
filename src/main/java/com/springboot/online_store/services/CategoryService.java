@@ -32,9 +32,9 @@ public class CategoryService {
         }
 
         Category category = new Category(categoryDto.name(), parentCategory);
-        categoryRepository.save(category);
+        var savedCategory = categoryRepository.save(category);
 
-        return mapper.toCategoryInfo(category);
+        return mapper.toCategoryInfo(savedCategory);
     }
 
     public List<CategoryInfoDto> getCategories(Integer pageSize, Integer pageNumber) {
@@ -79,5 +79,11 @@ public class CategoryService {
     public void deleteCategoryWithProducts(Long id){
         var category = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
         categoryRepository.deleteById(id);
+    }
+
+    public CategoryInfoDto getCategory(Long id) {
+        var category = categoryRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
+        return mapper.toCategoryInfo(category);
     }
 }

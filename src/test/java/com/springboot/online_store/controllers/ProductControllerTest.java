@@ -49,7 +49,7 @@ class ProductControllerTest {
             when(productService.getProduct(id))
                     .thenReturn(infoDto);
 
-            mockMvc.perform(get("/products/get/{id}", id))
+            mockMvc.perform(get("/products/{id}", id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.name").value(infoDto.name()))
                     .andExpect(jsonPath("$.price").value(infoDto.price()))
@@ -65,7 +65,7 @@ class ProductControllerTest {
             when(productService.getProduct(id))
                     .thenThrow(new EntityNotFoundException());
 
-            mockMvc.perform(get("/products/get/{id}", id))
+            mockMvc.perform(get("/products/{id}", id))
                     .andExpect(status().isNotFound());
 
             verify(productService).getProduct(id);

@@ -9,7 +9,6 @@ import com.springboot.online_store.exceptions.custom.CategoryNotEmptyException;
 import com.springboot.online_store.mappers.CategoryMapper;
 import com.springboot.online_store.repositories.CategoryRepository;
 import jakarta.persistence.EntityNotFoundException;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -298,7 +297,7 @@ class CategoryServiceTest {
         @Test
         void deleteCategoryWithProductsShouldThrowException() {
             Long id = 1L;
-            var category = mock(Category.class);
+
             when(categoryRepository.findById(id))
                     .thenReturn(Optional.empty());
 
@@ -311,13 +310,51 @@ class CategoryServiceTest {
         }
     }
 
+    @Nested
+    class getCategory{
+        @Test
+        void getCategoryShouldWork(){
+            Long id = 1L;
+            var infoDto = CategoryInfoDto.builder()
+                    .name("name")
+                    .build();
+            var category = mock(Category.class);
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.of(category));
+            when(categoryMapper.toCategoryInfo(category))
+                    .thenReturn(infoDto);
+
+            var result = categoryService.getCategory(id);
+
+            assertThat(result).isEqualTo(infoDto);
+            verify(categoryRepository).findById(id);
+            verify(categoryMapper).toCategoryInfo(category);
+        }
+
+        @Test
+        void getCategoryShouldThrowEntityNotFound(){
+            Long id = 1L;
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    EntityNotFoundException.class,
+                    () -> categoryService.getCategory(id)
+            );
+
+            verify(categoryRepository).findById(id);
+        }
+    }
+
     private CategoryCreateDto createDtoWithParent(){
         return CategoryCreateDto.builder()
                 .name("name")
                 .parentId(1L)
                 .build();
     }
-    private CategoryCreateDto createDtoWithoutParent(){
+    private CategoryCreateDto createDtoWithoutParent() {
         return CategoryCreateDto.builder()
                 .name("name")
                 .parentId(null)

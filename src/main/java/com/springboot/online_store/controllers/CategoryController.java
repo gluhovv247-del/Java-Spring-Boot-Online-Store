@@ -28,6 +28,15 @@ public class CategoryController {
                 .body(categoryService.createCategory(categoryDto));
     }
 
+    @GetMapping("{id}")
+    public ResponseEntity<CategoryInfoDto> getCategory(
+            @PathVariable("id") Long id
+    ){
+        log.info("get category with id = {}", id);
+        return ResponseEntity.ok(categoryService.getCategory(id));
+    }
+
+
     @GetMapping
     public ResponseEntity<List<CategoryInfoDto>> getCategories(
             @RequestParam(name = "pageSize", required = false) Integer pageSize,

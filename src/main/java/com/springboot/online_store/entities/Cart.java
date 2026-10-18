@@ -28,5 +28,4 @@ public class Cart {
     @OneToMany(mappedBy = "cart")
     @JsonIgnore
     private List<CartItem> cartItem = new ArrayList<>();
-
 }

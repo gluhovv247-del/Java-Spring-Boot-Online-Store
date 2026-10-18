@@ -4,6 +4,7 @@ import com.springboot.online_store.dtos.product.CreateAndUpdateProductDto;
 import com.springboot.online_store.dtos.product.ProductInfoDto;
 import com.springboot.online_store.entities.Product;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants;
 
 import java.util.List;
