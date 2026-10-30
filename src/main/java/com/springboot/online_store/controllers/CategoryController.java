@@ -55,14 +55,7 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteEmptyCategory(@PathVariable("id") Long id){
         log.info("delete only empty category with id = {}", id);
-        categoryService.deleteEmptyCategory(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/{id}/withProducts")
-    public ResponseEntity<Void> deleteCategoryWithProducts(@PathVariable("id") Long id){
-        log.info("delete category with id = {}", id);
-        categoryService.deleteCategoryWithProducts(id);
+        categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
 }

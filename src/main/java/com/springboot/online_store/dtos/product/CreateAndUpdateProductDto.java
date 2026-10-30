@@ -1,5 +1,6 @@
 package com.springboot.online_store.dtos.product;
 
+import com.springboot.online_store.enums.ProductStatus;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 
@@ -17,13 +18,16 @@ public record CreateAndUpdateProductDto(
         BigDecimal price,
 
         @NotNull
-        @Min(1)
-        @Max(5000)
+        @Min(0)
+        @Max(10000)
         int quantity,
 
         String imageUrl,
 
         @NotNull
-        Long categoryId
+        Long categoryId,
+
+        @NotNull
+        ProductStatus status
 ) {
 }

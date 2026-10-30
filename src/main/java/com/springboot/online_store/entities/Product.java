@@ -1,8 +1,8 @@
 package com.springboot.online_store.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.springboot.online_store.enums.ProductStatus;
 import jakarta.persistence.*;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,8 +12,21 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+
+@Table(name = "products",
+        check = {
+        @CheckConstraint(
+                name = "chk_product_price",
+                constraint = "price >= 0.1"
+        ),
+                @CheckConstraint(
+                        name = "chk_product_quantity",
+                        constraint = "quantity >= 0 AND quantity <= 5000"
+                )
+        }
+
+)
 @Entity
-@Table(name = "products")
 @NoArgsConstructor
 @Getter
 @Setter
@@ -44,12 +57,17 @@ public class Product {
     @JoinColumn(name = "category_id")
     private Category category;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<CartItem> cartItem = new ArrayList<>();
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private ProductStatus status;
+
     public Product(String name, BigDecimal price, int quantity, String imageUrl,
-                   LocalDateTime createdTime, LocalDateTime updatedTime, Category category) {
+                   LocalDateTime createdTime, LocalDateTime updatedTime, Category category,
+                   ProductStatus status) {
         this.name = name;
         this.price = price;
         this.quantity = quantity;
@@ -57,6 +75,11 @@ public class Product {
         this.createdTime = createdTime;
         this.updatedTime = updatedTime;
         this.category = category;
+        this.status = status;
+    }
+
+    public boolean isActive(){
+        return status == ProductStatus.ACTIVE;
     }
 }
 

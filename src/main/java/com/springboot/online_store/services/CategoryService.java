@@ -57,7 +57,7 @@ public class CategoryService {
         var category = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
 
         if(createDto.parentId() != null) {
-            var parentCategory = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+            var parentCategory = categoryRepository.findById(createDto.parentId()).orElseThrow(EntityNotFoundException::new);
             category.setParent(parentCategory);
         }
 
@@ -67,18 +67,23 @@ public class CategoryService {
         return mapper.toCategoryInfo(category);
     }
 
-    public void deleteEmptyCategory(Long id) {
-        var category = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
+    @Transactional
+    public void deleteCategory(Long id) {
+        var category = categoryRepository.findById(id)
+                .orElseThrow(EntityNotFoundException::new);
 
-        if(!category.getProducts().isEmpty() || !category.getChildren().isEmpty()){
-            throw new CategoryNotEmptyException("this category contains products or subcategories");
+        if (!category.getProducts().isEmpty()) {
+            throw new CategoryNotEmptyException(
+                    "Category contains products"
+            );
         }
-        categoryRepository.deleteById(id);
-    }
 
-    public void deleteCategoryWithProducts(Long id){
-        var category = categoryRepository.findById(id).orElseThrow(EntityNotFoundException::new);
-        categoryRepository.deleteById(id);
+        if (!category.getChildren().isEmpty()) {
+            throw new CategoryNotEmptyException(
+                    "Category contains subcategories"
+            );
+        }
+        categoryRepository.delete(category);
     }
 
     public CategoryInfoDto getCategory(Long id) {

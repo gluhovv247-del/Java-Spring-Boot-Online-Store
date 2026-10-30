@@ -164,7 +164,7 @@ class CategoryControllerTest {
             mockMvc.perform(delete("/categories/{id}", id))
                     .andExpect(status().isNoContent());
 
-            verify(categoryService).deleteEmptyCategory(id);
+            verify(categoryService).deleteCategory(id);
         }
 
         @Test
@@ -172,37 +172,12 @@ class CategoryControllerTest {
             Long id = 1L;
 
             doThrow(new EntityNotFoundException())
-                    .when(categoryService).deleteEmptyCategory(id);
+                    .when(categoryService).deleteCategory(id);
 
             mockMvc.perform(delete("/categories/{id}", id))
                     .andExpect(status().isNotFound());
 
-            verify(categoryService).deleteEmptyCategory(id);
-        }
-    }
-
-    @Nested
-    class deleteCategoryWithProducts {
-        @Test
-        void deleteCategoryWithProductsShouldWork() throws Exception {
-            Long id = 1L;
-
-            mockMvc.perform(delete("/categories/{id}/withProducts", id))
-                    .andExpect(status().isNoContent());
-
-            verify(categoryService).deleteCategoryWithProducts(id);
-        }
-        @Test
-        void deleteCategoryWithProductsShouldThrowEntityNotFoundException() throws Exception {
-            Long id = 1L;
-
-            doThrow(new EntityNotFoundException())
-                    .when(categoryService).deleteCategoryWithProducts(id);
-
-            mockMvc.perform(delete("/categories/{id}/withProducts", id))
-                    .andExpect(status().isNotFound());
-
-            verify(categoryService).deleteCategoryWithProducts(id);
+            verify(categoryService).deleteCategory(id);
         }
     }
 

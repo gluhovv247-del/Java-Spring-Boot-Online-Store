@@ -1,6 +1,7 @@
 package com.springboot.online_store.dtos.product;
 
 import com.springboot.online_store.entities.Category;
+import com.springboot.online_store.enums.ProductStatus;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -15,6 +16,7 @@ public record ProductInfoDto(
         String imageUrl,
         Category category,
         LocalDateTime createdTime,
-        LocalDateTime updatedTime
+        LocalDateTime updatedTime,
+        ProductStatus status
 ) {
 }

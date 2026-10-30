@@ -4,6 +4,7 @@ import com.springboot.online_store.constants.BusinessConstants;
 import com.springboot.online_store.dtos.product.*;
 import com.springboot.online_store.entities.Category;
 import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.enums.ProductStatus;
 import com.springboot.online_store.mappers.ProductMapper;
 import com.springboot.online_store.repositories.CategoryRepository;
 import com.springboot.online_store.repositories.ProductRepository;
@@ -39,6 +40,14 @@ public class ProductService {
     public ProductInfoDto createProduct(CreateAndUpdateProductDto productDto) {
         Category category = categoryRepository.findById(productDto.categoryId())
                 .orElseThrow(EntityNotFoundException::new);
+        ProductStatus status;
+
+        if(productDto.quantity() == 0){
+            status = ProductStatus.DISCONTINUED;
+        }
+        else{
+            status = productDto.status();
+        }
 
         var product = new Product(
                 productDto.name(),
@@ -47,8 +56,10 @@ public class ProductService {
                 productDto.imageUrl(),
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                category
+                category,
+                status
         );
+
         product = productRepository.save(product);
         return mapper.toProductInfoDto(product);
     }
@@ -71,11 +82,18 @@ public class ProductService {
         product.setCategory(category);
         product.setUpdatedTime(LocalDateTime.now());
 
+        if (productDto.quantity() == 0) {
+            product.setStatus(ProductStatus.DISCONTINUED);
+        } else {
+            product.setStatus(productDto.status());
+        }
+
         return mapper.toProductInfoDto(product);
     }
 
     public List<ProductInfoDto> getCatalog(ProductFilter filter) {
         Specification<Product> specification = Specification.unrestricted();
+        specification = specification.and(ProductSpecification.isAvailable());
 
         if (filter.category() != null) {
             specification =
@@ -98,6 +116,7 @@ public class ProductService {
 
     public List<ProductInfoDto> searchByFilter(ProductSearchFilter searchFilter){
         Specification<Product> specification = Specification.unrestricted();
+        specification = specification.and(ProductSpecification.isAvailable());
 
         int pageNumber = searchFilter.pageNumber() != null ?
                 searchFilter.pageNumber() : BusinessConstants.DEFAULT_PAGE_NUMBER;
@@ -112,7 +131,6 @@ public class ProductService {
         log.info("received: {} products", products.size());
 
         return mapper.toProductInfoDtoList(products);
-
     }
 
     private Specification<Product> fillSpecification(Specification<Product> spec,

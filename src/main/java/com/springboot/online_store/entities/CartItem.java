@@ -6,7 +6,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "cart_items")
+@Table(name = "cart_items",
+        check = {
+        @CheckConstraint(
+                name = "chk_cart_quantity",
+                constraint = "quantity > 0 AND quantity <= 5000"
+        )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,7 +22,7 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Setter
+    @Column(name = "quantity", nullable = false)
     private int quantity;
 
     @ManyToOne

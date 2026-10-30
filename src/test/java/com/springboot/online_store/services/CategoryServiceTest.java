@@ -242,7 +242,7 @@ class CategoryServiceTest {
             when(categoryRepository.findById(id))
                     .thenReturn(Optional.ofNullable(category));
 
-            categoryService.deleteEmptyCategory(id);
+            categoryService.deleteCategory(id);
 
             verify(categoryRepository).findById(id);
             verify(categoryRepository).deleteById(id);
@@ -264,7 +264,7 @@ class CategoryServiceTest {
 
             assertThrows(
                     CategoryNotEmptyException.class,
-                    () -> categoryService.deleteEmptyCategory(id)
+                    () -> categoryService.deleteCategory(id)
             );
 
             verify(categoryRepository).findById(id);
@@ -276,37 +276,6 @@ class CategoryServiceTest {
                     Arguments.of(List.of(new Product()), List.of()),
                     Arguments.of(List.of(), List.of(new Category()))
             );
-        }
-    }
-
-    @Nested
-    class DeleteCategoryWithProducts {
-        @Test
-        void deleteCategoryWithProductsShouldWork() {
-            Long id = 1L;
-            var category = mock(Category.class);
-            when(categoryRepository.findById(id))
-                    .thenReturn(Optional.ofNullable(category));
-
-            categoryService.deleteCategoryWithProducts(id);
-
-            verify(categoryRepository).findById(id);
-            verify(categoryRepository).deleteById(id);
-        }
-
-        @Test
-        void deleteCategoryWithProductsShouldThrowException() {
-            Long id = 1L;
-
-            when(categoryRepository.findById(id))
-                    .thenReturn(Optional.empty());
-
-            assertThrows(
-                    EntityNotFoundException.class,
-                    () -> categoryService.deleteCategoryWithProducts(id)
-            );
-            verify(categoryRepository).findById(id);
-            verify(categoryRepository, never()).deleteById(id);
         }
     }
 

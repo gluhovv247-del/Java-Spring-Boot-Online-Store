@@ -4,6 +4,8 @@ import com.springboot.online_store.constants.BusinessConstants;
 import com.springboot.online_store.dtos.cart.CartItemDto;
 import com.springboot.online_store.dtos.cart.UpdateCartItemDto;
 import com.springboot.online_store.entities.CartItem;
+import com.springboot.online_store.enums.ProductStatus;
+import com.springboot.online_store.exceptions.custom.DiscontinuedProductException;
 import com.springboot.online_store.exceptions.custom.InsufficientStockException;
 import com.springboot.online_store.mappers.CartItemMapper;
 import com.springboot.online_store.repositories.CartItemRepository;
@@ -46,12 +48,25 @@ public class CartItemService {
         if(product.getQuantity() < cartItemDto.quantity()) {
             throw new InsufficientStockException("Not enough products in stock");
         }
+        if(!product.isActive()){
+            throw new DiscontinuedProductException("Product discontinued now");
+        }
 
-        CartItem cartItem = new CartItem(
-                cartItemDto.quantity(),
-                cart,
-                product
-        );
+        CartItem cartItem = cartItemRepository
+                .findByCartIdAndProductId(cart.getId(), product.getId())
+                .orElse(null);
+
+        if (cartItem != null) {
+            cartItem.setQuantity(cartItem.getQuantity() + cartItemDto.quantity());
+
+        }
+        else {
+            cartItem = new CartItem(
+                    cartItemDto.quantity(),
+                    cart,
+                    product
+            );
+        }
 
         cartItemRepository.save(cartItem);
         return mapper.toCartItemDto(cartItem);
@@ -84,6 +99,9 @@ public class CartItemService {
 
         if(product.getQuantity() < cartItemDto.quantity()){
             throw new InsufficientStockException("Not enough products in stock");
+        }
+        if(product.getStatus() == ProductStatus.DISCONTINUED){
+            throw new DiscontinuedProductException("Product is discontinued now");
         }
 
         cartItem.setQuantity(cartItemDto.quantity());
