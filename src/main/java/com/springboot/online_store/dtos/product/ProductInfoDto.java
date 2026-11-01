@@ -1,0 +1,22 @@
+package com.springboot.online_store.dtos.product;
+
+import com.springboot.online_store.entities.Category;
+import com.springboot.online_store.enums.ProductStatus;
+import lombok.Builder;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
+@Builder
+public record ProductInfoDto(
+        Long id,
+        String name,
+        BigDecimal price,
+        int quantity,
+        String imageUrl,
+        Category category,
+        LocalDateTime createdTime,
+        LocalDateTime updatedTime,
+        ProductStatus status
+) {
+}

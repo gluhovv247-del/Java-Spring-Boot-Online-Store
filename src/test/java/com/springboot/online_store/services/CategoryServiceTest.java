@@ -1,0 +1,332 @@
+package com.springboot.online_store.services;
+
+import com.springboot.online_store.constants.BusinessConstants;
+import com.springboot.online_store.dtos.category.CategoryCreateDto;
+import com.springboot.online_store.dtos.category.CategoryInfoDto;
+import com.springboot.online_store.entities.Category;
+import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.exceptions.custom.CategoryNotEmptyException;
+import com.springboot.online_store.mappers.CategoryMapper;
+import com.springboot.online_store.repositories.CategoryRepository;
+import jakarta.persistence.EntityNotFoundException;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class CategoryServiceTest {
+    @Mock
+    private CategoryRepository categoryRepository;
+    @Mock
+    private CategoryMapper categoryMapper;
+
+    @InjectMocks
+    private CategoryService categoryService;
+
+
+    @Nested
+    class CreateCategory {
+        @Test
+        void createCategoryShouldWorkWithParentId() {
+            //GIVEN
+            var category = mock(Category.class);
+            var parentCategory = mock(Category.class);
+            var categoryInfoDto = CategoryInfoDto.builder()
+                    .name("name").build();
+            var categoryDto = createDtoWithParent();
+            ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+
+            when(categoryMapper.toCategoryInfo(any(Category.class)))
+                    .thenReturn(categoryInfoDto);
+            when(categoryRepository.save(any(Category.class)))
+                    .thenReturn(category);
+            when(categoryRepository.getReferenceById(categoryDto.parentId()))
+                    .thenReturn(parentCategory);
+
+            //WHEN
+            var result = categoryService.createCategory(categoryDto);
+
+            //THEN
+            assertThat(result).isEqualTo(categoryInfoDto);
+            verify(categoryMapper)
+                    .toCategoryInfo(any(Category.class));
+            verify(categoryRepository)
+                    .save(captor.capture());
+            verify(categoryRepository)
+                    .getReferenceById(categoryDto.parentId());
+
+            var capturedCategory = captor.getValue();
+            assertThat(capturedCategory.getName()).isEqualTo(categoryDto.name());
+            assertThat(capturedCategory.getParent()).isSameAs(parentCategory);
+        }
+
+        @Test
+        void createCategoryShouldWorkWithoutParentId() {
+            //GIVEN
+            var categoryDto = createDtoWithoutParent();
+            var category = mock(Category.class);
+            var categoryInfoDto = CategoryInfoDto.builder()
+                    .name("name").build();
+            ArgumentCaptor<Category> captor = ArgumentCaptor.forClass(Category.class);
+
+            when(categoryMapper.toCategoryInfo(any(Category.class)))
+                    .thenReturn(categoryInfoDto);
+            when(categoryRepository.save(any(Category.class)))
+                    .thenReturn(category);
+
+            //WHEN
+            var result = categoryService.createCategory(categoryDto);
+
+            //THEN
+            assertThat(result).isEqualTo(categoryInfoDto);
+            verify(categoryMapper)
+                    .toCategoryInfo(any(Category.class));
+            verify(categoryRepository)
+                    .save(captor.capture());
+
+            var capturedCategory = captor.getValue();
+            assertThat(capturedCategory.getName()).isEqualTo(categoryDto.name());
+            assertThat(capturedCategory.getParent()).isSameAs(null);
+        }
+    }
+
+    @Nested
+    class GetCategories{
+        @Test
+        void getCategoriesShouldWork() {
+            var categoryDto = mock(CategoryInfoDto.class);
+            var category = mock(Category.class);
+            int pageSize = 10;
+            int pageNumber = 0;
+            var pageable = Pageable.ofSize(pageSize).withPage(pageNumber);
+            var categoryList = List.of(category);
+            var categoryDtoList = List.of(categoryDto);
+
+            when(categoryRepository.findAll(eq(pageable)))
+                    .thenReturn(new PageImpl<>(categoryList));
+            when(categoryMapper.toCategoryInfoDtoList(categoryList))
+                    .thenReturn(categoryDtoList);
+
+            var result = categoryService.getCategories(pageSize, pageNumber);
+
+            assertThat(result).isEqualTo(categoryDtoList);
+            verify(categoryRepository).findAll(eq(pageable));
+            verify(categoryMapper).toCategoryInfoDtoList(categoryList);
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideFailedPageParams")
+        void getCategoriesShouldWorkWithoutPageParams(Integer pageSize, Integer pageNumber) {
+            var categoryDto = mock(CategoryInfoDto.class);
+            var category = mock(Category.class);
+            var pageable = Pageable.ofSize(BusinessConstants.DEFAULT_PAGE_SIZE)
+                    .withPage(BusinessConstants.DEFAULT_PAGE_NUMBER);
+            var categoryList = List.of(category);
+            var categoryDtoList = List.of(categoryDto);
+
+            when(categoryRepository.findAll(eq(pageable)))
+                    .thenReturn(new PageImpl<>(categoryList));
+            when(categoryMapper.toCategoryInfoDtoList(categoryList))
+                    .thenReturn(categoryDtoList);
+
+            var result = categoryService.getCategories(pageSize, pageNumber);
+
+            assertThat(result).isEqualTo(categoryDtoList);
+            verify(categoryRepository).findAll(eq(pageable));
+            verify(categoryMapper).toCategoryInfoDtoList(categoryList);
+        }
+
+        private static Stream<Arguments> provideFailedPageParams(){
+            return Stream.of(
+                    Arguments.of(null , null),
+                    Arguments.of(-2, -2)
+            );
+        }
+    }
+
+    @Nested
+    class UpdateCategory {
+        @Test
+        void updateCategoryShouldWorkWithoutParent() {
+            var category = mock(Category.class);
+            var categoryInfo = CategoryInfoDto.builder()
+                    .name("name").build();
+            var createCategory = createDtoWithoutParent();
+            Long id = 1L;
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(category));
+            when(categoryMapper.toCategoryInfo(category))
+                    .thenReturn(categoryInfo);
+
+            var result = categoryService.updateCategory(
+                    createCategory, id
+            );
+
+            assertThat(result).isEqualTo(categoryInfo);
+
+            verify(category).setName(createCategory.name());
+            verify(categoryRepository).findById(id);
+            verify(categoryMapper).toCategoryInfo(category);
+        }
+
+        @Test
+        void updateCategoryShouldWork() {
+            var category = mock(Category.class);
+            var categoryInfo = CategoryInfoDto.builder()
+                    .name("name").build();
+            var createCategory = createDtoWithParent();
+            Long id = 1L;
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(category));
+
+            when(categoryMapper.toCategoryInfo(category))
+                    .thenReturn(categoryInfo);
+
+            var result = categoryService.updateCategory(
+                    createCategory, id
+            );
+
+            assertThat(result).isEqualTo(categoryInfo);
+
+            verify(category).setName(createCategory.name());
+            verify(category).setParent(category);
+
+            verify(categoryRepository, times(2)).findById(id);
+            verify(categoryMapper).toCategoryInfo(category);
+        }
+
+        @Test
+        void shouldThrowEntityNotFoundException(){
+            var category = mock(Category.class);
+            var createCategory = createDtoWithParent();
+            Long id = 1L;
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(EntityNotFoundException.class,
+            () -> categoryService.updateCategory(createCategory, id));
+
+            verify(categoryRepository).findById(id);
+            verify(category, never()).setName(createCategory.name());
+            verify(category, never()).setParent(category);
+        }
+    }
+
+    @Nested
+    class DeleteEmptyCategory {
+        @Test
+        void deleteEmptyCategoryShouldWork() {
+            Long id = 1L;
+            var category = new Category("name", null);
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.of(category));
+
+            categoryService.deleteCategory(id);
+
+            verify(categoryRepository).findById(id);
+            verify(categoryRepository).delete(category);
+        }
+
+        @ParameterizedTest
+        @MethodSource("provideCategoryLists")
+        void deleteEmptyCategoryWhenFilled(List<Product> products, List<Category> children) {
+            Long id = 1L;
+            var category = mock(Category.class);
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.of(category));
+            if (!products.isEmpty()) {
+                when(category.getProducts()).thenReturn(products);
+            } else if (!children.isEmpty()) {
+                when(category.getChildren()).thenReturn(children);
+            }
+
+            assertThrows(
+                    CategoryNotEmptyException.class,
+                    () -> categoryService.deleteCategory(id)
+            );
+
+            verify(categoryRepository).findById(id);
+            verify(categoryRepository, never()).deleteById(id);
+        }
+        private static Stream<Arguments> provideCategoryLists(){
+            return Stream.of(
+                    Arguments.of(List.of(new Product()), List.of(new Category())),
+                    Arguments.of(List.of(new Product()), List.of()),
+                    Arguments.of(List.of(), List.of(new Category()))
+            );
+        }
+    }
+
+    @Nested
+    class getCategory{
+        @Test
+        void getCategoryShouldWork(){
+            Long id = 1L;
+            var infoDto = CategoryInfoDto.builder()
+                    .name("name")
+                    .build();
+            var category = mock(Category.class);
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.of(category));
+            when(categoryMapper.toCategoryInfo(category))
+                    .thenReturn(infoDto);
+
+            var result = categoryService.getCategory(id);
+
+            assertThat(result).isEqualTo(infoDto);
+            verify(categoryRepository).findById(id);
+            verify(categoryMapper).toCategoryInfo(category);
+        }
+
+        @Test
+        void getCategoryShouldThrowEntityNotFound(){
+            Long id = 1L;
+
+            when(categoryRepository.findById(id))
+                    .thenReturn(Optional.empty());
+
+            assertThrows(
+                    EntityNotFoundException.class,
+                    () -> categoryService.getCategory(id)
+            );
+
+            verify(categoryRepository).findById(id);
+        }
+    }
+
+    private CategoryCreateDto createDtoWithParent(){
+        return CategoryCreateDto.builder()
+                .name("name")
+                .parentId(1L)
+                .build();
+    }
+    private CategoryCreateDto createDtoWithoutParent() {
+        return CategoryCreateDto.builder()
+                .name("name")
+                .parentId(null)
+                .build();
+    }
+}

@@ -1,0 +1,75 @@
+package com.springboot.online_store.controllers;
+
+import com.springboot.online_store.dtos.product.CreateAndUpdateProductDto;
+import com.springboot.online_store.dtos.product.ProductFilter;
+import com.springboot.online_store.dtos.product.ProductInfoDto;
+import com.springboot.online_store.dtos.product.ProductSearchFilter;
+import com.springboot.online_store.services.ProductService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Slf4j
+@RestController
+@RequestMapping("/products")
+public class ProductController {
+
+    private final ProductService productService;
+
+    public ProductController(ProductService productService) {
+        this.productService = productService;
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ProductInfoDto> getProduct(@PathVariable("id") Long id){
+        log.info("get product with id: {}", id);
+        return ResponseEntity.ok(productService.getProduct(id));
+    }
+
+    @PostMapping
+    public ResponseEntity<ProductInfoDto> createProduct(@Valid @RequestBody CreateAndUpdateProductDto productDto){
+        log.info("create product: {}", productDto);
+        return ResponseEntity.status(HttpStatus.CREATED).
+                body(productService.createProduct(productDto));
+    }
+
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteProduct(@PathVariable("id") Long id){
+        log.info("delete product with id: {}", id);
+
+        productService.deleteProduct(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ProductInfoDto> updateProduct(
+            @PathVariable Long id,
+            @Valid @RequestBody CreateAndUpdateProductDto productDto
+            ){
+        log.info("update product: {}", productDto);
+
+        return ResponseEntity.ok(productService.updateProduct(id, productDto));
+    }
+
+    @GetMapping
+    public ResponseEntity<List<ProductInfoDto>> getProductsCatalog(
+            @Valid ProductFilter productFilter
+    ){
+        log.info("get products catalog");
+        return ResponseEntity.ok(productService.getCatalog(productFilter));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<ProductInfoDto>> getProductsBySearch(
+            @Valid ProductSearchFilter filter
+    ){
+        log.info("get products with filter");
+        return ResponseEntity.ok(productService.searchByFilter(filter));
+    }
+
+}
