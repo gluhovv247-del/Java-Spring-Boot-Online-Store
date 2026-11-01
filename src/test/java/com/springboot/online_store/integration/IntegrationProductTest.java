@@ -2,8 +2,10 @@ package com.springboot.online_store.integration;
 
 import com.springboot.online_store.dtos.product.CreateAndUpdateProductDto;
 import com.springboot.online_store.dtos.product.ProductInfoDto;
+import com.springboot.online_store.dtos.product.ProductSearchFilter;
 import com.springboot.online_store.entities.Category;
 import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.enums.ProductStatus;
 import com.springboot.online_store.repositories.CategoryRepository;
 import com.springboot.online_store.repositories.ProductRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -94,7 +96,8 @@ public class IntegrationProductTest {
                 null,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                category
+                category,
+                ProductStatus.ACTIVE
         );
         productRepository.save(product);
 
@@ -126,7 +129,8 @@ public class IntegrationProductTest {
                 null,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                category
+                category,
+                ProductStatus.ACTIVE
         );
         productRepository.save(product);
 
@@ -168,7 +172,8 @@ public class IntegrationProductTest {
                 null,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                category
+                category,
+                ProductStatus.ACTIVE
         );
         productRepository.save(product);
 
@@ -193,6 +198,7 @@ public class IntegrationProductTest {
                 .categoryId(categoryId)
                 .quantity(50)
                 .imageUrl("fjddjdj")
+                .status(ProductStatus.ACTIVE)
                 .build();
     }
 

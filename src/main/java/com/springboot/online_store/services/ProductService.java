@@ -8,10 +8,12 @@ import com.springboot.online_store.enums.ProductStatus;
 import com.springboot.online_store.mappers.ProductMapper;
 import com.springboot.online_store.repositories.CategoryRepository;
 import com.springboot.online_store.repositories.ProductRepository;
+import com.springboot.online_store.sorting.ProductSort;
 import com.springboot.online_store.specifications.ProductSpecification;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -25,11 +27,13 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductMapper mapper;
+    private final ProductSort sort;
 
-    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper mapper) {
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository, ProductMapper mapper, ProductSort sort) {
         this.productRepository = productRepository;
         this.categoryRepository = categoryRepository;
         this.mapper = mapper;
+        this.sort = sort;
     }
 
     public ProductInfoDto getProduct(Long id) {
@@ -124,8 +128,13 @@ public class ProductService {
         int pageSize = searchFilter.pageSize() != null ?
                 searchFilter.pageSize() : BusinessConstants.DEFAULT_PAGE_SIZE;
 
+        var pageable = PageRequest.of(
+                pageNumber,
+                pageSize,
+                sort.getSort(searchFilter.sortType())
+        );
+
         specification = fillSpecification(specification, searchFilter);
-        var pageable = Pageable.ofSize(pageSize).withPage(pageNumber);
         var products = productRepository.findAll(specification, pageable).toList();
 
         log.info("received: {} products", products.size());

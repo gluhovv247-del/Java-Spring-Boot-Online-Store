@@ -7,6 +7,8 @@ import com.springboot.online_store.entities.Cart;
 import com.springboot.online_store.entities.CartItem;
 import com.springboot.online_store.entities.Category;
 import com.springboot.online_store.entities.Product;
+import com.springboot.online_store.enums.ProductStatus;
+import com.springboot.online_store.exceptions.custom.DiscontinuedProductException;
 import com.springboot.online_store.exceptions.custom.InsufficientStockException;
 import com.springboot.online_store.mappers.CartItemMapper;
 import com.springboot.online_store.repositories.CartItemRepository;
@@ -97,6 +99,48 @@ class CartItemServiceTest {
         }
 
         @Test
+        void createCartItemWithExistingProductShouldWork() {
+            var cart = mock(Cart.class);
+            var infoDto = cartItemDto();
+            var product = productBuilder();
+            var cartItemDto = cartItemDto();
+            var cartItem = cartItemBuilder(cart, product);
+
+            Long id = 1L;
+            ArgumentCaptor<CartItem> captor = ArgumentCaptor.forClass(CartItem.class);
+
+            when(productRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(product));
+            when(cartRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(cart));
+            when(cartItemRepository.save(any(CartItem.class)))
+                    .thenReturn(cartItem);
+            when(cartItemRepository.findByCartIdAndProductId(cart.getId(), product.getId()))
+                    .thenReturn(Optional.of(cartItem));
+            when(mapper.toCartItemDto(any(CartItem.class)))
+                    .thenReturn(infoDto);
+
+            //WHEN
+            var result = cartItemService.createCartItem(cartItemDto);
+
+            //THEN
+            assertThat(result).isEqualTo(infoDto);
+            verify(productRepository)
+                    .findById(id);
+            verify(cartRepository)
+                    .findById(id);
+            verify(cartItemRepository)
+                    .save(captor.capture());
+            verify(cartItemRepository)
+                    .findByCartIdAndProductId(cart.getId(), product.getId());
+            verify(mapper)
+                    .toCartItemDto(any(CartItem.class));
+
+            var capturedCategory = captor.getValue();
+            assertThat(capturedCategory.getQuantity()).isEqualTo(cartItem.getQuantity());
+        }
+
+        @Test
         void createCartItemShouldThrowInsufficientStockException() {
             var cart = mock(Cart.class);
             var product = productBuilder();
@@ -112,6 +156,32 @@ class CartItemServiceTest {
 
             assertThrows(InsufficientStockException.class,
             () -> cartItemService.createCartItem(cartItemDtoWithLargeQuantity));
+
+            //THEN
+            verify(productRepository)
+                    .findById(id);
+            verify(cartRepository)
+                    .findById(id);
+            verify(cartItemRepository, never())
+                    .save(any(CartItem.class));
+        }
+
+        @Test
+        void createCartItemShouldThrowDiscontinuedProductException() {
+            var cart = mock(Cart.class);
+            var product = discontinuedProductBuilder();
+            var cartItemDto = cartItemDto();
+            Long id = 1L;
+
+            when(productRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(product));
+            when(cartRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(cart));
+
+            //WHEN
+
+            assertThrows(DiscontinuedProductException.class,
+                    () -> cartItemService.createCartItem(cartItemDto));
 
             //THEN
             verify(productRepository)
@@ -264,7 +334,7 @@ class CartItemServiceTest {
         @Test
         void updateCartItemShouldThrowInsufficientStockException() {
             var cartItem = mock(CartItem.class);
-            var product = mock(Product.class);
+            var product = productBuilder();
             var updateCartItemDtoWithLargeQuantity =
                     new UpdateCartItemDto(100);
             Long id = 1L;
@@ -276,6 +346,28 @@ class CartItemServiceTest {
 
             assertThrows(InsufficientStockException.class,
                     () -> cartItemService.updateCartItem(id, updateCartItemDtoWithLargeQuantity));
+
+            verify(cartItemRepository)
+                    .findById(id);
+            verify(cartItem)
+                    .getProduct();
+        }
+
+        @Test
+        void updateCartItemShouldThrowDiscontinuedProductException() {
+            var cartItem = mock(CartItem.class);
+            var product = discontinuedProductBuilder();
+            var updateCartItemDto=
+                    new UpdateCartItemDto(1);
+            Long id = 1L;
+
+            when(cartItem.getProduct())
+                    .thenReturn(product);
+            when(cartItemRepository.findById(id))
+                    .thenReturn(Optional.ofNullable(cartItem));
+
+            assertThrows(DiscontinuedProductException.class,
+                    () -> cartItemService.updateCartItem(id, updateCartItemDto));
 
             verify(cartItemRepository)
                     .findById(id);
@@ -340,7 +432,7 @@ class CartItemServiceTest {
     private CartItemDto cartItemDto(){
         return CartItemDto.builder()
                 .productId(1L)
-                .quantity(1)
+                .quantity(6)
                 .build();
     }
 
@@ -351,6 +443,14 @@ class CartItemServiceTest {
                 .build();
     }
 
+    private CartItem cartItemBuilder(Cart cart, Product product){
+        return new CartItem(
+                5,
+                cart,
+                product
+        );
+    }
+
     private Product productBuilder(){
         return new Product(
                 "name",
@@ -359,7 +459,20 @@ class CartItemServiceTest {
                 null,
                 LocalDateTime.now(),
                 LocalDateTime.now(),
-                new Category()
+                new Category(),
+                ProductStatus.ACTIVE
+        );
+    }
+    private Product discontinuedProductBuilder(){
+        return new Product(
+                "name",
+                (BigDecimal.valueOf(100)),
+                10,
+                null,
+                LocalDateTime.now(),
+                LocalDateTime.now(),
+                new Category(),
+                ProductStatus.DISCONTINUED
         );
     }
 }

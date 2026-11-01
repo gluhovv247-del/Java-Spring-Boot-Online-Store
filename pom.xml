@@ -257,6 +257,8 @@
 						<exclude>com/springboot/online_store/entities/**</exclude>
 						<exclude>com/springboot/online_store/enums/**</exclude>
 						<exclude>com/springboot/online_store/constants/**</exclude>
+						<exclude>com/springboot/online_store/exceptions/**</exclude>
+						<exclude>com/springboot/online_store/mappers/**</exclude>
 					</excludes>
 				</configuration>
 

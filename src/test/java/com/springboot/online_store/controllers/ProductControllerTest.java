@@ -5,6 +5,7 @@ import com.springboot.online_store.dtos.product.ProductFilter;
 import com.springboot.online_store.dtos.product.ProductInfoDto;
 import com.springboot.online_store.dtos.product.ProductSearchFilter;
 import com.springboot.online_store.entities.Category;
+import com.springboot.online_store.enums.ProductStatus;
 import com.springboot.online_store.services.ProductService;
 import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.Nested;
@@ -252,6 +253,7 @@ class ProductControllerTest {
                 .price(BigDecimal.valueOf(1000))
                 .quantity(50)
                 .imageUrl("fjddjdj")
+                .status(ProductStatus.ACTIVE)
                 .build();
     }
 
@@ -262,6 +264,7 @@ class ProductControllerTest {
                 .categoryId(1L)
                 .quantity(50)
                 .imageUrl("fjddjdj")
+                .status(ProductStatus.ACTIVE)
                 .build();
     }
 

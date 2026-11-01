@@ -238,14 +238,14 @@ class CategoryServiceTest {
         @Test
         void deleteEmptyCategoryShouldWork() {
             Long id = 1L;
-            var category = mock(Category.class);
+            var category = new Category("name", null);
             when(categoryRepository.findById(id))
-                    .thenReturn(Optional.ofNullable(category));
+                    .thenReturn(Optional.of(category));
 
             categoryService.deleteCategory(id);
 
             verify(categoryRepository).findById(id);
-            verify(categoryRepository).deleteById(id);
+            verify(categoryRepository).delete(category);
         }
 
         @ParameterizedTest

@@ -1,6 +1,7 @@
 package com.springboot.online_store.dtos.product;
 
 import com.springboot.online_store.entities.Category;
+import com.springboot.online_store.enums.SortType;
 import jakarta.validation.constraints.Min;
 import lombok.Builder;
 
@@ -15,6 +16,7 @@ public record ProductSearchFilter(
         String name,
         Category category,
         BigDecimal minPrice,
-        BigDecimal maxPrice
+        BigDecimal maxPrice,
+        SortType sortType
 ) {
 }
